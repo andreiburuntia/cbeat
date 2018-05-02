@@ -1,0 +1,9 @@
+- key: cbeat
+  title: cbeat
+  description:
+  fields:
+    - name: counter
+      type: long
+      required: true
+      description: >
+        PLEASE UPDATE DOCUMENTATION

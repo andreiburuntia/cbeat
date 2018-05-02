@@ -1,0 +1,5 @@
+= Cbeat Docs
+
+Welcome to the Cbeat documentation.
+
+
