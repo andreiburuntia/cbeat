@@ -43,3 +43,9 @@ before-build:
 # Collects all dependencies and then calls update
 .PHONY: collect
 collect:
+
+run:
+	./cbeat -c cbeat.yml -e -d "*"
+
+stop:
+	pkill -9 cbeat
