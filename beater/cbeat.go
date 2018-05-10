@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"time"
 	"net/http"
+	"os"
+	"log"
+	"io"
+	"bytes"
 
 	"github.com/elastic/beats/libbeat/beat"
 	"github.com/elastic/beats/libbeat/common"
@@ -11,6 +15,17 @@ import (
 	"github.com/elastic/beats/libbeat/publisher"
 
 	"github.com/andreiburuntia/cbeat/config"
+
+	"github.com/rjeczalik/notify"
+)
+
+const (
+    MAX_CONCURRENT_WRITERS = 5
+)
+
+var (
+    pipePath string
+    filePath string
 )
 
 type Cbeat struct {
@@ -43,12 +58,55 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func readPipe(){
+	var p *os.File
+    var err error
+    var e notify.EventInfo
+
+    pipePath = "/tmp/cupsbeat"
+
+    // The usual stuff: checking wether the named pipe exists etc
+    if p, err = os.Open(pipePath); os.IsNotExist(err) {
+        log.Fatalf("Named pipe '%s' does not exist", pipePath)
+    } else if os.IsPermission(err) {
+        log.Fatalf("Insufficient permissions to read named pipe '%s': %s", pipePath, err)
+    } else if err != nil {
+        log.Fatalf("Error while opening named pipe '%s': %s", pipePath, err)
+    }
+    // Yep, there and readable. Close the file handle on exit
+    defer p.Close()
+
+    c := make(chan notify.EventInfo, MAX_CONCURRENT_WRITERS)
+
+    notify.Watch(pipePath, c, notify.Write|notify.Remove)
+
+
+	var buf bytes.Buffer
+    // We start an infinite loop...
+    for {
+        // ...waiting for an event to be passed.
+        e = <-c
+
+        switch e.Event() {
+
+        case notify.Write:
+			io.Copy(&buf, p)
+			newStr := buf.String()
+			logp.Info("HIT!")
+			logp.Info(newStr)
+			messageQueue <- newStr
+
+        case notify.Remove:
+            log.Fatalf("Named pipe '%s' was removed. Quitting", pipePath)
+        }
+    }
+}
+
 func (bt *Cbeat) Run(b *beat.Beat) error {
 	logp.Info("cbeat is running! Hit CTRL-C to stop it.")
 
 	go func(){
-		http.HandleFunc("/test", test)
-		http.ListenAndServe(":9000", nil)
+		readPipe()
 	}()
 	logp.Info("here")
 	bt.client = b.Publisher.Connect()
