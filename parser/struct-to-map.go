@@ -30,9 +30,9 @@ func readLines(path string, m map[string]string) map[string]map[string]string{
 	for scanner.Scan() {
 		for k := range m {
 			if strings.Contains(scanner.Text(), m[k]){
-				//fmt.Println("------------" + m[k] + "---------------")
+				fmt.Println("------------" + k + "---------------")
 				found[k]=1
-				maps[m[k]] = make(map[string]string)
+				maps[k] = make(map[string]string)
 			}
 			if strings.Contains(scanner.Text(), "}"){
 				found[k]=0
@@ -48,8 +48,8 @@ func readLines(path string, m map[string]string) map[string]map[string]string{
 				preComment = strings.Replace(preComment, " ", "", -1)
 				preComment = strings.Replace(preComment, "\t", "", -1)
 				preComment = strings.Replace(preComment, "\n", "", -1)
-				maps[m[k]][preComment] = name
-				//fmt.Println(name + "=" + preComment)
+				maps[k][preComment] = name
+				fmt.Println(name + "=" + preComment)
 			}
 		}
 	}
@@ -57,8 +57,21 @@ func readLines(path string, m map[string]string) map[string]map[string]string{
 	return maps;
   }
 
-func main() {
+  func writeLines(lines []string, path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+	  return err
+	}
+	defer file.Close()
+  
+	w := bufio.NewWriter(file)
+	for _, line := range lines {
+	  fmt.Fprintln(w, line)
+	}
+	return w.Flush()
+  }
 
+func main() {
 	// init main map
 	var m map[string]string
 	
@@ -72,15 +85,29 @@ func main() {
 	m["cupsColorOrder"] = "cups_order_e"
 	m["Orientation"] = "cups_orient_e"
 
-	// map of maps: e.g. m[cups_edge_e]={0:CUPS_EDGE_TOP, 1:CUPS_EDGE_RIGHT etc}
-	//var maps map[string]map[int]string
-
-	//maps = map[string]map[int]string
-
 	var maps = readLines("./cups-enums.h", m)
+
+	var lines = make([]string, 0)
+	// prepare file 'header'
+	lines = append(lines,"package cups_itf")
+	lines = append(lines,"\n")
+	lines = append(lines,"var Maps = map[string]map[string]string {")
+
 	for k := range maps{
+		lines = append(lines, "\"" + k + "\": {")
 		for kk := range maps[k]{
-			fmt.Println(k + " -->   " + kk + " = " + maps[k][kk])
+			lines = append(lines, "\""  + kk + "\": " + "\"" + maps[k][kk] + "\",")
 		}
+		lines = append(lines, "},")
 	}
+	lines = append(lines,"}")
+	lines = append(lines, "func main(){\n}")
+
+	writeLines(lines, "../cups_itf/cups_itf.go")
+
+	for i := range lines{
+		fmt.Println(lines[i])
+	}
+
+	
 }

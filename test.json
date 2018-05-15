@@ -1,0 +1,34 @@
+{
+	"CutMedia": 4,
+	"Duplex": 0,
+	"HWResolution": {
+		"hr1": 600,
+		"hr2": 600
+	},
+	"ImagingBoundingBox": {
+		"ibb1": 0,
+		"ibb2": 0,
+		"ibb3": 595,
+		"ibb4": 842
+	},
+	"InsertSheet": 0,
+	"Jog": 0,
+	"LeadingEdge": 0,
+	"ManualFeed": 0,
+	"MediaPosition": 0,
+	"MediaWeight": 0,
+	"NumCopies": 1,
+	"Orientation": 2,
+	"PageSize": {
+		"ps1": 595,
+		"ps2": 842
+	},
+	"Tumble": 0,
+	"cupsWidth": 4958,
+	"cupsHeight": 7017,
+	"cupsBitsPerColor": 8,
+	"cupsBitsPerPixel": 24,
+	"cupsColorOrder": 14874,
+	"cupsColorSpace": 0,
+	"cupsNumColors": 3
+}
